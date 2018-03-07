@@ -7,7 +7,7 @@
 
 (defroutes app
   (GET "/" [] home/page)
-  (GET "/search" [] home/search)
+  (POST "/search" request (home/search (:form-params request)))
   (route/resources "/")
   (route/not-found "Not found"))
 

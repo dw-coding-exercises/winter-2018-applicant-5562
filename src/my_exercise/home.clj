@@ -1,7 +1,16 @@
 (ns my-exercise..home
   (:require [hiccup.page :refer [html5]]
             [ring.util.anti-forgery :refer [anti-forgery-field]]
-            [my-exercise..us-state :as us-state]))
+            [my-exercise..us-state :as us-state]
+            [clojure.string :refer :all]
+            [compojure.core :refer :all]
+            [compojure.route :as route]
+            [org.httpkit.client :as http]
+            [clojure.data.json :as json]
+            [ring.middleware.json :as middleware]
+            [ring.util.response :refer [response]]
+            [ring.middleware.defaults :refer [wrap-defaults site-defaults]]))
+
 
 (defn header [_]
   [:head
@@ -137,19 +146,31 @@
    (instructions request)
    (address-form request)))
 
+(comment 
+  set turbovote API)
+(def TURBOVOTE_API "https://api.turbovote.org/elections/upcoming?district-divisions=")
 
 (comment 
-  Ingest the incoming form parameters
-  Derive a basic set of OCD-IDs from the address (see below for further explanation)
-  Retrieve upcoming elections from the Democracy Works election API using those OCD-IDs
-  Display any matching elections to the use)
+  append results to API call)
+(defn callTurbovoteApi 
+	[searchTerm]
+		(let [response (http/get (str TURBOVOTE_API (ring.util.codec/url-encode searchTerm)))]
+			(def results (:docs (:response (json/read-str (:body @response) :key-fn keyword))))
+		))
 
-(defn results [_]
-  [:div
-    ]
-  )
+(comment 
+  replace space with underscore in city name)
+(defn format-city [s]
+  (str 
+    (replace s #" " "_")))
 
+(comment
+  parse results from form params and derive a set of ocd-ids)
+(defn searchTerm [content]
+  [:div (str "ocd-division/country:us/state:" (lower-case (get content "state"))) (str ",ocd-division/country:us/state:" (lower-case(get content "state"))) (str "/place:"  (format-city (lower-case(get content "city"))))])
+
+(comment 
+  make API call with the search term)
 (defn search [request]
   (html5
-   (header request)
-   (results request)))
+   (callTurbovoteApi (get request :searchTerm))))
