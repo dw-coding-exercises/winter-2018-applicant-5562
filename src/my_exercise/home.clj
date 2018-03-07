@@ -136,3 +136,20 @@
    (header request)
    (instructions request)
    (address-form request)))
+
+
+(comment 
+  Ingest the incoming form parameters
+  Derive a basic set of OCD-IDs from the address (see below for further explanation)
+  Retrieve upcoming elections from the Democracy Works election API using those OCD-IDs
+  Display any matching elections to the use)
+
+(defn results [_]
+  [:div
+    ]
+  )
+
+(defn search [request]
+  (html5
+   (header request)
+   (results request)))
